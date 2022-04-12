@@ -1,1 +1,2 @@
-Github repository for IM458-B course.
+## Github repository for IM458-B course ##
+
