@@ -34,8 +34,7 @@ class KS:
         # save to self
         self.L      = L
         self.N      = N
-        #self.dx     = 2*pi*L/N
-        self.dx     = 2*pi*L/(N-1)
+        self.dx     = 2*pi*L/N
         self.dt     = dt
         self.nsteps = nsteps
         self.iout   = iout
@@ -67,7 +66,8 @@ class KS:
 
 
     def setup_fourier(self, coeffs=None):
-        self.x  = 2*pi*self.L*np.r_[0:self.N]/self.N
+        #self.x  = 2*pi*self.L*np.r_[0:self.N]/self.N
+	self.x  = 2*pi*self.L*np.r_[0:self.N]/(self.N-1)
         self.k  = np.r_[0:self.N/2, 0, -self.N/2+1:0]/self.L # Wave numbers
         # Fourier multipliers for the linear term Lu
         if (coeffs is None):
