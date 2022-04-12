@@ -35,7 +35,7 @@ class KS:
         self.L      = L
         self.N      = N
         #self.dx     = 2*pi*L/N
-	self.dx     = 2*pi*L/(N-1)
+        self.dx     = 2*pi*L/(N-1)
         self.dt     = dt
         self.nsteps = nsteps
         self.iout   = iout
