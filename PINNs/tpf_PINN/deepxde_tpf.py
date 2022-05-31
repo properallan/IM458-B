@@ -151,16 +151,6 @@ def tpf_PINN(outputs=True):
     #x_domain = (0, 1)
     #t_domain = (0, 0.99)
     #eps = 1e-3
-    left_bc = 1
-    N_domain = 2560
-    N_boundary = 80
-    N_initial = 160
-    NN_topology = [2] + [32]*3 + [1]
-    NN_activation = "tanh"
-    NN_init = "Glorot normal"
-    NN_optimizers = ['adam', 'L-BFGS']
-    NN_epochs = [15000, None]
-    NN_lr = [1e-3, None]
 
     def tpf_pde(x, u):
         du_t = dde.grad.jacobian(u, x, i=0, j=1)
@@ -206,7 +196,14 @@ def f_convex(u, M):
 def f_nonconvex(u, M):
     return u**2.0/(u**2.0+(1.0-u)**2.0/M)
 
-
+def plot2d(x,t,u_pred):
+    xx,tt = np.meshgrid(x,t)
+    uu = u_pred.reshape((len(t),len(x)))
+    fig = plt.figure()
+    pc = plt.pcolormesh(xx,tt,uu)
+    fig.colorbar(pc)
+    plt.xlabel('x')
+    plt.ylabel('t')
 
 '''optuna 
 flux = f_convex
@@ -233,16 +230,21 @@ study = optuna.create_study(direction='minimize')
 study.optimize(objective, n_trials=20, n_jobs=4)
 '''
 
-
-# animation
-# anim = animate(X, u_true, u_pred, x, t)
-# anim
-
 Nx = 256
 Nt = 100
 x_domain = (0, 1)
 t_domain = (0, 0.99)
 eps = 1e-3
+left_bc = 1
+N_domain = 2560
+N_boundary = 80
+N_initial = 160
+NN_topology = [2] + [32]*3 + [1]
+NN_activation = "tanh"
+NN_init = "Glorot normal"
+NN_optimizers = ['adam', 'L-BFGS']
+NN_epochs = [15000, None]
+NN_lr = [1e-3, None]
 
 x = np.linspace(x_domain[0], x_domain[-1], Nx)
 t = np.linspace(t_domain[0], t_domain[-1], Nt)
@@ -250,18 +252,28 @@ X = spaceTimeDomain(x,t)
 
 M = 1 
 flux = f_convex
-pinn_convex, anim_convex = tpf_PINN()
-
+pinn_convex = tpf_PINN()
 u_pred = pinn_convex.model.predict(X)
-u_true = solve_exact(f_convex, x, t, M=1)
+u_true = solve_exact(flux, x, t, M)
 anim_convex = animate(X, u_true, u_pred, x, t)
-anim_convex
+#anim_convex
 
-'''
-pinn_concave, anim_concave = tpf_PINN(f_concave, M=2)
-anim_concave
 
-pinn_nonconvex, anim_nonconvex = tpf_PINN(f_nonconvex, M=1)
-anim_nonconvex
-'''
+M = 2 
+flux = f_concave
+pinn_concave = tpf_PINN()
+u_pred = pinn_concave.model.predict(X)
+u_true = solve_exact(flux, x, t, M)
+anim_convex = animate(X, u_true, u_pred, x, t)
+#anim_concave
+
+
+M = 1
+flux = f_nonconvex
+pinn_nonconvex = tpf_PINN()
+u_pred = pinn_nonconvex.model.predict(X)
+u_true = solve_exact(flux, x, t, M)
+anim_convex = animate(X, u_true, u_pred, x, t)
+#anim_convex
+
 
