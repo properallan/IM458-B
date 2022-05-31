@@ -8,8 +8,8 @@ from matplotlib import rc
 
 tol = 1e-12
 
-def u_solve(u_nonconvex, x, t, M):
-    u_sol = np.array([np.array([u_nonconvex(xi, ti, M) for xi in x]) for ti in t])
+def u_solve(uf, x, t, M):
+    u_sol = np.array([np.array([uf(xi, ti, M) for xi in x]) for ti in t], dtype=np.float32)
     return u_sol
 
 def diff(f, u, M, h=tol):
