@@ -281,3 +281,55 @@ class KS:
         #
         # compute u_resid
         self.uu_resid = self.uu - self.uu_filt
+	
+def ks_sol(x, u0, tmax=150, h=0.05):
+    
+    N = x.size
+    #x = np.transpose(np.conj(np.arange(1, N+1))) / N
+    a = -1
+    b = 1
+    #u = np.cos(x/16)*(1+np.sin(x/16))
+    u = u0
+    v = np.fft.fft(u)
+    
+    # scalars for ETDRK4
+    k = np.transpose(np.conj(np.concatenate((np.arange(0, N/2),
+                                             np.array([0]), np.arange(-N/2+1, 0))))) / 16
+    L = k**2 - k**4
+    E = np.exp(h*L)
+    E_2 = np.exp(h*L/2)
+    M = 16
+    r = np.exp(1j*np.pi*(np.arange(1, M+1)-0.5) / M)
+    LR = h*np.transpose(np.repeat([L], M, axis=0)) + np.repeat([r], N, axis=0)
+    Q = h*np.real(np.mean((np.exp(LR/2)-1)/LR, axis=1))
+    f1 = h*np.real(np.mean((-4-LR+np.exp(LR)*(4-3*LR+LR**2))/LR**3, axis=1))
+    f2 = h*np.real(np.mean((2+LR+np.exp(LR)*(-2+LR))/LR**3, axis=1))
+    f3 = h*np.real(np.mean((-4-3*LR-LR**2+np.exp(LR)*(4-LR))/LR**3, axis=1))
+    
+    # main loop
+    uu = np.array([u])
+    tt = 0
+  
+    nmax = round(tmax/h)
+
+    g = -0.5j*k
+    
+    for n in range(1, nmax):
+        
+        #print(f'step {n}')
+        
+        t = n*h
+        Nv = g*np.fft.fft(np.real(np.fft.ifft(v))**2)
+        a = E_2*v + Q*Nv
+        Na = g*np.fft.fft(np.real(np.fft.ifft(a))**2)
+        b = E_2*v + Q*Na
+        Nb = g*np.fft.fft(np.real(np.fft.ifft(b))**2)
+        c = E_2*a + Q*(2*Nb-Nv)
+        Nc = g*np.fft.fft(np.real(np.fft.ifft(c))**2)
+        v = E*v + Nv*f1 + 2*(Na+Nb)*f2 + Nc*f3
+        
+        u = np.real(np.fft.ifft(v))
+        uu = np.append(uu, np.array([u]), axis=0)
+        tt = np.hstack((tt, t))
+        
+    return uu, tt, x
